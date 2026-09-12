@@ -97,4 +97,24 @@ sp/src/vgui2/*.pdb
 # Build support files
 sp/src/devtools/gcc9+support.o
 
+# Invasion
+/.claude
+/.vscode
 /docs
+/tools
+CLAUDE.md
+
+# Specific Invasion build products
+game_shader_dx9.pdb
+game_shader_dx9.dll
+game_shader_dx9.lib
+
+# Invasion build folders
+sp/src/game/client/Debug_invasion/
+sp/src/game/client/Release_invasion/
+sp/src/game/server/Debug_invasion/
+sp/src/game/server/Release_invasion/
+sp/src/materialsystem/stdshaders/Debug_dx9_invasion/
+sp/src/materialsystem/stdshaders/Release_dx9_invasion/
+sp/src/materialsystem/stdshaders/*.txt
+sp/src/materialsystem/stdshaders/makefile.*

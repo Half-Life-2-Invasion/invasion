@@ -88,3 +88,16 @@ $Group "maptools"
 	"vscript"
 }
 
+$Group "invasion"
+{
+	"client"
+	"game_shader_dx9"
+	"mathlib"
+	"responserules"
+	"raytrace"
+	"server"
+	"tier1"
+	"vgui_controls"
+	"vscript"
+}
+
