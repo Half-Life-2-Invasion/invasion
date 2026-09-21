@@ -35,6 +35,11 @@ BEGIN_VS_SHADER( SDK_WorldVertexTransition_DX9, "Help for SDK_WorldVertexTransit
 		SHADER_PARAM( ENVMAPMASKFRAME, SHADER_PARAM_TYPE_INTEGER, "", "" )
 		SHADER_PARAM( ENVMAPMASKTRANSFORM, SHADER_PARAM_TYPE_MATRIX, "center .5 .5 scale 1 1 rotate 0 translate 0 0", "$envmapmask texcoord transform" )
 		SHADER_PARAM( ENVMAPTINT, SHADER_PARAM_TYPE_COLOR, "[1 1 1]", "envmap tint" )
+		SHADER_PARAM( ENVMAP2, SHADER_PARAM_TYPE_TEXTURE, "shadertest/shadertest_env", "second envmap layer, added on top of $envmap" )
+		SHADER_PARAM( ENVMAP2FRAME, SHADER_PARAM_TYPE_INTEGER, "0", "frame number for $envmap2" )
+		SHADER_PARAM( ENVMAP2TINT, SHADER_PARAM_TYPE_COLOR, "[1 1 1]", "$envmap2 tint" )
+		SHADER_PARAM( ENVMAP2SMOOTH, SHADER_PARAM_TYPE_FLOAT, "0.0", "0 == $envmap2 follows $bumpmap, 1 == $envmap2 follows the flat surface normal" )
+		SHADER_PARAM( ENVMAPCROSSFADE, SHADER_PARAM_TYPE_FLOAT, "0.0", "amount by which $basetexture alpha crossfades between the lit surface (alpha 1) and the envmaps (alpha 0)" )
 		SHADER_PARAM( BUMPMAP, SHADER_PARAM_TYPE_TEXTURE, "models/shadertest/shader1_normal", "bump map" )
 		SHADER_PARAM( BUMPFRAME, SHADER_PARAM_TYPE_INTEGER, "0", "frame number for $bumpmap" )
 		SHADER_PARAM( BUMPTRANSFORM, SHADER_PARAM_TYPE_MATRIX, "center .5 .5 scale 1 1 rotate 0 translate 0 0", "$bumpmap texcoord transform" )
@@ -100,6 +105,11 @@ BEGIN_VS_SHADER( SDK_WorldVertexTransition_DX9, "Help for SDK_WorldVertexTransit
 		info.m_nEnvmapMaskFrame = ENVMAPMASKFRAME;
 		info.m_nEnvmapMaskTransform = ENVMAPMASKTRANSFORM;
 		info.m_nEnvmapTint = ENVMAPTINT;
+		info.m_nEnvmap2 = ENVMAP2;
+		info.m_nEnvmap2Frame = ENVMAP2FRAME;
+		info.m_nEnvmap2Tint = ENVMAP2TINT;
+		info.m_nEnvmap2Smooth = ENVMAP2SMOOTH;
+		info.m_nEnvmapCrossfade = ENVMAPCROSSFADE;
 		info.m_nBumpmap = BUMPMAP;
 		info.m_nBumpFrame = BUMPFRAME;
 		info.m_nBumpTransform = BUMPTRANSFORM;

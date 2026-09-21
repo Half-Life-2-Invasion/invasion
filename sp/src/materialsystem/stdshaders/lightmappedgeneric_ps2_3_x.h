@@ -129,6 +129,17 @@ const float4x4 obbMatrix					: register(c22); //through c25
 const HALF g_BlendInverted					: register(c21);
 #endif
 
+#if CUBEMAP && !defined( _X360 )
+#define ENVMAP2 1
+const HALF4 g_Envmap2Tint					: register( c20 );
+#define g_Envmap2Smooth g_Envmap2Tint.w
+#else
+#define ENVMAP2 0
+#endif
+
+const float4 g_EnvmapCrossfade				: register( c9 );
+#define g_EnvmapCrossfadeAmount g_EnvmapCrossfade.x
+
 
 sampler BaseTextureSampler		: register( s0 );
 sampler LightmapSampler			: register( s1 );
@@ -178,6 +189,10 @@ sampler AlphaMaskSampler		: register( s11 );	// alpha
 sampler FlashlightSampler		: register( s13 );
 sampler ShadowDepthSampler		: register( s14 );
 sampler RandRotSampler			: register( s15 );
+#endif
+
+#if ENVMAP2
+sampler Envmap2Sampler			: register( s13 );
 #endif
 
 struct PS_INPUT
@@ -244,6 +259,18 @@ HALF4 main( PS_INPUT i ) : COLOR
 	baseTexCoords.xy = i.baseTexCoord.xy;
 #endif
 
+#if ( !SEAMLESS && !RELIEF_MAPPING && ( DETAILTEXTURE == 0 ) )
+#define SEPARATE_BUMP_COORD 1
+#else
+#define SEPARATE_BUMP_COORD 0
+#endif
+
+#if SEPARATE_BUMP_COORD
+	float2 bumpTexCoords = i.detailOrBumpAndEnvmapMaskTexCoord.xy;
+#else
+	float2 bumpTexCoords = baseTexCoords.xy;
+#endif
+
 #if BASETEXTURETRANSFORM2
 	// Blixibon - Simpler version of GetBaseTextureAndNormal() that supports $basetexturetransform2
 	// (make this its own function in common_lightmappedgeneric_fxc.h if this becomes more widespread)
@@ -255,11 +282,19 @@ HALF4 main( PS_INPUT i ) : COLOR
 	baseColor2 = tex2D( BaseTextureSampler2, i.baseTexCoord.wz );
 	if ( bBumpmap || bNormalMapAlphaEnvmapMask )
 	{
-		vNormal  = tex2D( BumpmapSampler, baseTexCoords.xy );
+		vNormal  = tex2D( BumpmapSampler, bumpTexCoords );
 	}
 #else
-	GetBaseTextureAndNormal( BaseTextureSampler, BaseTextureSampler2, BumpmapSampler, bBaseTexture2, bBumpmap || bNormalMapAlphaEnvmapMask, 
+	GetBaseTextureAndNormal( BaseTextureSampler, BaseTextureSampler2, BumpmapSampler, bBaseTexture2,
+		( bBumpmap || bNormalMapAlphaEnvmapMask ) && ( SEPARATE_BUMP_COORD == 0 ),
 		baseTexCoords, i.vertexColor.rgb, baseColor, baseColor2, vNormal );
+
+#if SEPARATE_BUMP_COORD
+	if ( bBumpmap || bNormalMapAlphaEnvmapMask )
+	{
+		vNormal = tex2D( BumpmapSampler, bumpTexCoords );
+	}
+#endif
 #endif
 
 #if BUMPMAP == 1	// not ssbump
@@ -462,6 +497,8 @@ HALF4 main( PS_INPUT i ) : COLOR
 	{
 		specularFactor *= 1.0 - blendedAlpha; // Reversing alpha blows!
 	}
+
+	specularFactor *= lerp( 1.0, 1.0 - blendedAlpha, g_EnvmapCrossfadeAmount );
 	float4 albedo = float4( 1.0f, 1.0f, 1.0f, 1.0f );
 	float alpha = 1.0f;
 	albedo *= baseColor;
@@ -583,6 +620,8 @@ HALF4 main( PS_INPUT i ) : COLOR
 		diffuseComponent = lerp( diffuseComponent, selfIllumComponent, blendedAlpha ); // Blixibon - Replaced baseColor.a with blendedAlpha
 	}
 
+	diffuseComponent *= lerp( 1.0, blendedAlpha, g_EnvmapCrossfadeAmount );
+
 	HALF3 specularLighting = HALF3( 0.0f, 0.0f, 0.0f );
 #if CUBEMAP
 	if( bCubemap )
@@ -624,6 +663,13 @@ HALF4 main( PS_INPUT i ) : COLOR
 		specularLighting = lerp( greyScale, specularLighting, g_EnvmapSaturation );
 #endif
 		specularLighting *= fresnel;
+
+#if ENVMAP2
+		float3 normal2 = lerp( worldSpaceNormal, i.tangentSpaceTranspose[2], g_Envmap2Smooth );
+		float3 reflectVect2 = CalcReflectionVectorUnnormalized( normal2, worldVertToEyeVector );
+		specularLighting += ENV_MAP_SCALE * texCUBE( Envmap2Sampler, reflectVect2 ).rgb * g_Envmap2Tint.rgb
+			* lerp( 1.0, 1.0 - blendedAlpha, g_EnvmapCrossfadeAmount );
+#endif
 	}
 #endif
 

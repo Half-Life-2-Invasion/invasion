@@ -48,6 +48,11 @@ struct LightmappedGeneric_DX9_Vars_t
 	int m_nEnvmapMaskFrame;
 	int m_nEnvmapMaskTransform;
 	int m_nEnvmapTint;
+	int m_nEnvmap2;
+	int m_nEnvmap2Frame;
+	int m_nEnvmap2Tint;
+	int m_nEnvmap2Smooth;
+	int m_nEnvmapCrossfade;
 	int m_nBumpmap;
 	int m_nBumpFrame;
 	int m_nBumpTransform;

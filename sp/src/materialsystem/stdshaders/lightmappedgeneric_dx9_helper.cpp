@@ -95,6 +95,17 @@ void InitParamsLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** pa
 			Warning( "env_cubemap used on world geometry without rebuilding map. . ignoring: %s\n", pMaterialName );
 			params[info.m_nEnvmap]->SetUndefined();
 		}
+
+		if( params[info.m_nEnvmap2]->IsDefined() && stricmp( params[info.m_nEnvmap2]->GetStringValue(), "env_cubemap" ) == 0 )
+		{
+			Warning( "$envmap2 cannot use env_cubemap. . ignoring: %s\n", pMaterialName );
+			params[info.m_nEnvmap2]->SetUndefined();
+		}
+	}
+
+	if( !params[info.m_nEnvmap]->IsDefined() )
+	{
+		params[info.m_nEnvmap2]->SetUndefined();
 	}
 	
 	if ( (mat_disable_lightwarp.GetBool() ) &&
@@ -110,6 +121,9 @@ void InitParamsLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** pa
 
 	if( !params[info.m_nEnvmapTint]->IsDefined() )
 		params[info.m_nEnvmapTint]->SetVecValue( 1.0f, 1.0f, 1.0f );
+
+	if( !params[info.m_nEnvmap2Tint]->IsDefined() )
+		params[info.m_nEnvmap2Tint]->SetVecValue( 1.0f, 1.0f, 1.0f );
 
 	if( !params[info.m_nNoDiffuseBumpLighting]->IsDefined() )
 		params[info.m_nNoDiffuseBumpLighting]->SetIntValue( 0 );
@@ -135,6 +149,9 @@ void InitParamsLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** pa
 	if( !params[info.m_nEnvmapFrame]->IsDefined() )
 		params[info.m_nEnvmapFrame]->SetIntValue( 0 );
 
+	if( !params[info.m_nEnvmap2Frame]->IsDefined() )
+		params[info.m_nEnvmap2Frame]->SetIntValue( 0 );
+
 	if( !params[info.m_nBumpFrame]->IsDefined() )
 		params[info.m_nBumpFrame]->SetIntValue( 0 );
 
@@ -146,6 +163,12 @@ void InitParamsLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** pa
 	
 	if( !params[info.m_nEnvmapSaturation]->IsDefined() )
 		params[info.m_nEnvmapSaturation]->SetFloatValue( 1.0f );
+
+	if( !params[info.m_nEnvmap2Smooth]->IsDefined() )
+		params[info.m_nEnvmap2Smooth]->SetFloatValue( 0 );
+
+	if( !params[info.m_nEnvmapCrossfade]->IsDefined() )
+		params[info.m_nEnvmapCrossfade]->SetFloatValue( 0.0f );
 	
 	InitFloatParam( info.m_nAlphaTestReference, params, 0.0f );
 
@@ -243,15 +266,15 @@ void InitParamsLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** pa
 
 #ifdef MAPBASE
 // Created for the missing cubemap solution below
-void LoadLightmappedGenericEnvmap( CBaseVSShader *pShader, IMaterialVar** params, LightmappedGeneric_DX9_Vars_t &info )
+void LoadLightmappedGenericEnvmap( CBaseVSShader *pShader, IMaterialVar** params, int nEnvmap )
 {
 	if ( !IS_FLAG_SET(MATERIAL_VAR_ENVMAPSPHERE) )
 	{
-		pShader->LoadCubeMap( info.m_nEnvmap, g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE ? TEXTUREFLAGS_SRGB : 0 );
+		pShader->LoadCubeMap( nEnvmap, g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE ? TEXTUREFLAGS_SRGB : 0 );
 	}
 	else
 	{
-		pShader->LoadTexture( info.m_nEnvmap );
+		pShader->LoadTexture( nEnvmap );
 	}
 }
 #endif
@@ -319,7 +342,7 @@ void InitLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params, 
 	if (params[info.m_nEnvmap]->IsDefined())
 	{
 #ifdef MAPBASE
-		LoadLightmappedGenericEnvmap( pShader, params, info );
+		LoadLightmappedGenericEnvmap( pShader, params, info.m_nEnvmap );
 
 		if (mat_specular_disable_on_missing.GetBool())
 		{
@@ -328,7 +351,7 @@ void InitLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params, 
 			if (params[info.m_nEnvmap]->GetTextureValue()->IsError())
 			{
 				params[info.m_nEnvmap]->SetStringValue( "engine/defaultcubemap" );
-				LoadLightmappedGenericEnvmap( pShader, params, info );
+				LoadLightmappedGenericEnvmap( pShader, params, info.m_nEnvmap );
 			}
 		}
 #else
@@ -345,6 +368,24 @@ void InitLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** params, 
 		if ( !g_pHardwareConfig->SupportsCubeMaps() )
 		{
 			SET_FLAGS( MATERIAL_VAR_ENVMAPSPHERE );
+		}
+
+		if ( params[info.m_nEnvmap2]->IsDefined() && !IS_FLAG_SET( MATERIAL_VAR_ENVMAPSPHERE ) )
+		{
+#ifdef MAPBASE
+			LoadLightmappedGenericEnvmap( pShader, params, info.m_nEnvmap2 );
+
+			if (mat_specular_disable_on_missing.GetBool())
+			{
+				if (params[info.m_nEnvmap2]->GetTextureValue()->IsError())
+				{
+					params[info.m_nEnvmap2]->SetStringValue( "engine/defaultcubemap" );
+					LoadLightmappedGenericEnvmap( pShader, params, info.m_nEnvmap2 );
+				}
+			}
+#else
+			pShader->LoadCubeMap( info.m_nEnvmap2, g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE ? TEXTUREFLAGS_SRGB : 0 );
+#endif
 		}
 
 		if ( params[info.m_nEnvmapMask]->IsDefined() )
@@ -953,7 +994,16 @@ void DrawLightmappedGeneric_DX9_Internal(CBaseVSShader *pShader, IMaterialVar** 
 					pShaderShadow->AlphaFunc( SHADER_ALPHAFUNC_GEQUAL, params[info.m_nAlphaTestReference]->GetFloatValue() );
 				}
 
-				pShader->SetDefaultBlendingShadowState( nAlphaChannelTextureVar, hasBaseTexture );
+				if( IS_FLAG_SET( MATERIAL_VAR_TRANSLUCENT ) &&
+					params[info.m_nEnvmapCrossfade]->GetFloatValue() > 0.0f )
+				{
+					pShaderShadow->EnableBlending( true );
+					pShaderShadow->BlendFunc( SHADER_BLEND_ONE, SHADER_BLEND_ONE_MINUS_SRC_ALPHA );
+				}
+				else
+				{
+					pShader->SetDefaultBlendingShadowState( nAlphaChannelTextureVar, hasBaseTexture );
+				}
 
 				unsigned int flags = VERTEX_POSITION;
 
@@ -996,6 +1046,15 @@ void DrawLightmappedGeneric_DX9_Internal(CBaseVSShader *pShader, IMaterialVar** 
 						if( g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE )
 						{
 							pShaderShadow->EnableSRGBRead( SHADER_SAMPLER2, true );
+						}
+
+						if( IsPC() )
+						{
+							pShaderShadow->EnableTexture( SHADER_SAMPLER13, true );
+							if( g_pHardwareConfig->GetHDRType() == HDR_TYPE_NONE )
+							{
+								pShaderShadow->EnableSRGBRead( SHADER_SAMPLER13, true );
+							}
 						}
 					}
 					flags |= VERTEX_TANGENT_S | VERTEX_TANGENT_T | VERTEX_NORMAL;
@@ -1358,6 +1417,18 @@ void DrawLightmappedGeneric_DX9_Internal(CBaseVSShader *pShader, IMaterialVar** 
 			bool bEditorBlend = (hasBaseTexture2 && pShader->UsingEditor( params )); // Mapbase - For fixing editor blending
 #endif
 
+			pContextData->m_SemiStaticCmdsOut.SetPixelShaderConstant4( 9, params[info.m_nEnvmapCrossfade]->GetFloatValue(), 0.0f, 0.0f, 0.0f );
+			if( hasEnvmap && IsPC() )
+			{
+				float envmap2TintVal[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+				if( params[info.m_nEnvmap2]->IsTexture() )
+				{
+					params[info.m_nEnvmap2Tint]->GetVecValue( envmap2TintVal, 3 );
+					envmap2TintVal[3] = params[info.m_nEnvmap2Smooth]->GetFloatValue();
+				}
+				pContextData->m_SemiStaticCmdsOut.SetPixelShaderConstant( 20, envmap2TintVal, 1 );
+			}
+
 			pContextData->m_bPixelShaderFastPath = true;
 			bool bUsingContrast = hasEnvmap && ( (envmapContrast != 0.0f) && (envmapContrast != 1.0f) ) && (envmapSaturation != 1.0f);
 			bool bUsingFresnel = hasEnvmap && (fresnelReflection != 1.0f);
@@ -1597,6 +1668,18 @@ void DrawLightmappedGeneric_DX9_Internal(CBaseVSShader *pShader, IMaterialVar** 
 		if( hasEnvmap )
 		{
 			DynamicCmdsOut.BindTexture( pShader, SHADER_SAMPLER2, info.m_nEnvmap, info.m_nEnvmapFrame );
+
+			if( IsPC() )
+			{
+				if( params[info.m_nEnvmap2]->IsTexture() )
+				{
+					DynamicCmdsOut.BindTexture( pShader, SHADER_SAMPLER13, info.m_nEnvmap2, info.m_nEnvmap2Frame );
+				}
+				else
+				{
+					DynamicCmdsOut.BindTexture( pShader, SHADER_SAMPLER13, info.m_nEnvmap, info.m_nEnvmapFrame );
+				}
+			}
 		}
 		int nFixedLightingMode = pShaderAPI->GetIntRenderingParameter( INT_RENDERPARM_ENABLE_FIXED_LIGHTING );
 
