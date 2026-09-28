@@ -1979,6 +1979,7 @@ void CBaseVSShader::DrawFlashlight_dx90( IMaterialVar** params, IShaderDynamicAP
 		ITexture *pFlashlightDepthTexture;
 		FlashlightState_t flashlightState = pShaderAPI->GetFlashlightStateEx( worldToTexture, &pFlashlightDepthTexture );
 
+#ifndef INVASION
 		if ( pFlashlightDepthTexture == NULL )
 		{
 			const int iFlashlightShadowIndex = ( flashlightState.m_nShadowQuality >> 16 ) - 1;
@@ -1989,6 +1990,7 @@ void CBaseVSShader::DrawFlashlight_dx90( IMaterialVar** params, IShaderDynamicAP
 				pFlashlightDepthTexture = (ITexture*)pShaderAPI->GetIntRenderingParameter( INT_FLASHLIGHT_DEPTHTEXTURE_FALLBACK_FIRST + iFlashlightShadowIndex );
 			}
 		}
+#endif
 
 		float flFlashlightPos[4] = { XYZ( flashlightState.m_vecLightOrigin ) };
 		pShaderAPI->SetPixelShaderConstant( PSREG_FRESNEL_SPEC_PARAMS, flFlashlightPos );

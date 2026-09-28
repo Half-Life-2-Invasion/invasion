@@ -8,6 +8,17 @@ $Macro SRCDIR		"..\.."
 $Macro GAMENAME "invasion"
 $Include "$SRCDIR\materialsystem\stdshaders\game_shader_dx9_base.vpc"
 
+$Configuration
+{
+	$Compiler
+	{
+		$PreprocessorDefinitions		"$BASE;INVASION"
+	}
+}
+
 $Project "Shaders (Invasion)"
 {
+	$Folder	"Source Files"
+	{
+	}
 }

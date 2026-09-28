@@ -1399,7 +1399,7 @@ bool CClientShadowMgr::Init()
 
 	SetShadowBlobbyCutoffArea( 0.005 );
 
-#ifndef MAPBASE
+#if !defined( MAPBASE ) || defined( INVASION )
 	bool bTools = CommandLine()->CheckParm( "-tools" ) != NULL;
 	m_nMaxDepthTextureShadows = bTools ? 4 : 1;	// Just one shadow depth texture in games, more in tools
 #else
@@ -4474,7 +4474,7 @@ void CClientShadowMgr::ComputeShadowDepthTextures( const CViewSetup &viewSetup )
 
 			Assert(0);
 			shadowmgr->SetFlashlightDepthTexture( shadow.m_ShadowHandle, NULL, 0 );
-#ifdef MAPBASE
+#if defined( MAPBASE ) && !defined( INVASION )
 			if ( j <= ( INT_FLASHLIGHT_DEPTHTEXTURE_FALLBACK_LAST - INT_FLASHLIGHT_DEPTHTEXTURE_FALLBACK_FIRST ) )
 			{
 				pRenderContext->SetIntRenderingParameter( INT_FLASHLIGHT_DEPTHTEXTURE_FALLBACK_FIRST + j, 0 );
@@ -4545,7 +4545,7 @@ void CClientShadowMgr::ComputeShadowDepthTextures( const CViewSetup &viewSetup )
 		// Render to the shadow depth texture with appropriate view
 		view->UpdateShadowDepthTexture( m_DummyColorTexture, shadowDepthTexture, shadowView );
 
-#ifdef MAPBASE
+#if defined( MAPBASE ) && !defined( INVASION )
 		if ( j <= ( INT_FLASHLIGHT_DEPTHTEXTURE_FALLBACK_LAST - INT_FLASHLIGHT_DEPTHTEXTURE_FALLBACK_FIRST ) )
 		{
 			pRenderContext->SetIntRenderingParameter( INT_FLASHLIGHT_DEPTHTEXTURE_FALLBACK_FIRST + j, int((ITexture*)shadowDepthTexture) );
